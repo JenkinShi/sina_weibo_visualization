@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Drawing Curves</title>
+	<script type="text/javascript" src="../js/d3.min.js"></script>
+	<style type="text/css">
+		
+		.axis path,
+		.axis line {
+			fill: none;
+			stroke: black;
+			shape-rendering: crispEdges;
+		}
+		
+		.axis text {
+			font-family: sans-serif;
+			font-size: 13px;
+		}
+
+	</style>
+	<script type="text/javascript">
+	var width = 800;
+	var height = 320;
+	var step = 5;
+	var colorNum = 20;
+	var colorTable = ['#C0C0C0','#F0C0F0','#E3CF57','#FF6103','#B0E0E6',
+					'#D2691E','#00C957','#808069','#FFC0CB','#3D59AB',
+					'#8A2BE2','#7CFC00','#FF8000','#03A89E','#FF4500',
+					'#de9c53','#823635','#89bebe','#c51f1f','#113f3d'];
+	var datasetMin = [], datasetHour = [], datasetDay = [];
+	var intervel = 1.5;
+	var offsetFirst;
+	var leftMin=100, rightMin=250, leftHour=251, rightHour=501, leftDay=502, rightDay=782;
+	var stepAmountMin = (rightMin - leftMin)/step;
+	var stepAmountHour = (rightHour - leftHour)/step;
+	var stepAmountDay = (rightDay - leftDay)/step;
+
+	//var namesInOrder = ['a','b','c'];
+	var colorsInOrder = [5,2, 4, 3,1];
+	var pathOrder = ['b','e','a','c','d'];
+	var recentTopic = ['b','c','d'];
+	var time_hour = [1,2,3,4];
+	var time_min = [0,23,45,12];
+
+	var line = d3.svg.line()
+			.x(function(d){return d.x;})
+			.y(function(d){return height - d.y;})
+			.interpolate("linear");
+
+	function genTestData(){
+		dataset = [];
+		data0 = [];
+		data1 = [];
+		data2 = [];
+		data3 = [];
+		data4 = [];
+		for(i=0;i<width;i+=step){
+			var term = new Object();
+			term.state = 1;
+			term.x = i;
+			term.y = Math.abs(Math.sin(i*3.14/200)*50);
+			data0.push(term);
+		}
+		for(i=0;i<width;i+=step){
+			var term = new Object();
+			term.state = 1;
+			term.x = i;
+			term.y = Math.sin(i*3.14/400)*20+30;
+			data1.push(term);
+		}
+		for(i=0;i<width;i+=step){
+			var term = new Object();
+			term.state = 1;
+			term.x = i;
+			term.y = 50;
+			data2.push(term);
+		}
+		for(i=0;i<width;i+=step){
+			var term = new Object();
+			if(i<100){
+				term.state = 1;
+				term.x = i;
+				term.y = i/3 +20; 
+			}
+			else{
+				term.state = 0;
+				term.x = i;
+				term.y = 0;
+			}
+			data3.push(term);
+		}
+		for(i=0;i<width;i+=step){
+			var term = new Object();
+			if(i<100){
+				term.state = 2;
+				term.x = i;
+				term.y = i/4;
+			}
+			else{
+				term.state = 0;
+				term.x = i;
+				term.y = i/20+20;
+			}
+			data4.push(term);
+		}
+
+		dataset = {'b':data1,'a':data0,'c':data2,'d':data3,'e':data4};
+		// dataset[0] = data0;
+		// dataset[1] = data1;
+		// dataset[2] = data2;
+		return dataset;
+	}
+
+	function genPathFromOffset(offset, stepAmount, dataset){
+		path = [];
+		for(i=0; i<pathOrder.length; i++){
+			name = pathOrder[i];
+			onePath = [];
+			for(j=0; j<stepAmount; j++){
+				term = new Object();
+				term.x = j*step;
+				term.y = offset[j];
+				onePath.push(term);
+			}
+			for(j=stepAmount-1; j>=0; j--){
+				term = new Object();
+				term.x = j*step;
+				term.y = offset[j]+dataset[name][j].y;
+				onePath.push(term);
+				offset[j] = offset[j] + dataset[name][j].y+intervel;
+			}
+			path[i] = onePath;
+		}
+
+		return path;
+	}
+
+	function genStreamData(dataset, stepAmount){
+		var offset = [];
+		var ceiling;
+		var path = [];
+		var nameCenter = pathOrder[Math.floor((pathOrder.length)/2)];
+		var base = 0;
+
+		for(j=0; j<stepAmount; j++){
+			ceiling = 0;
+			i = 0;
+			while(pathOrder[i] != nameCenter){
+				ceiling += dataset[pathOrder[i]][j].y + intervel;
+				i++;
+			}
+			ceiling += dataset[pathOrder[i]][j].y/2;
+			offset[j] = height/2 - ceiling;
+		}
+		offsetFirst = offset[0];
+		path = genPathFromOffset(offset, stepAmount, dataset);
+		
+		return path;
+	}
+
+	function genNewData(dataset, name, stepAmount, base){
+		var offset = [];
+
+		for(j=0; j<stepAmount; j++){
+			ceiling = 0;
+			i = 0;
+			while(pathOrder[i] != name){
+				ceiling += dataset[pathOrder[i]][j].y + intervel;
+				i++;
+			}
+			if(pathOrder.indexOf(name)<pathOrder.length/2){
+				ceiling += dataset[pathOrder[i]][j].y;
+			}
+			//ceiling += dataset[pathOrder[i]][j].y/2;
+			offset[j] = base - ceiling;
+		}
+
+		path = genPathFromOffset(offset, stepAmount, dataset);
+		return path;
+	}
+
+	function mouseleave(node){
+		var newPath = [];
+
+		newPath[0] = genStreamData(datasetMin, stepAmountMin);
+		newPath[1] = genStreamData(datasetMin, stepAmountHour);
+		newPath[2] = genStreamData(datasetMin, stepAmountDay);
+
+		d3.selectAll(node.childNodes)
+			.data(newPath)
+			.selectAll("g")
+			.data(function(d) { return d; })
+			.transition()
+			.select("path")
+			.attr("d",function(d){
+				return line(d);
+			})
+			.style({'fill-opacity':0.8});
+	}
+
+	function mouseenter(name, node){
+		var newPath = [];
+		var newBase = offsetFirst;
+		i = 0;
+
+		while(pathOrder[i] != name){
+			newBase += datasetMin[pathOrder[i]][0].y + intervel;
+			i++;
+		}
+		if(pathOrder.indexOf(name)<pathOrder.length/2){
+			newBase += dataset[pathOrder[i]][0].y;
+		}
+		// newBase += dataset[pathOrder[i]][0].y/2;
+
+		newPath[0] = genNewData(datasetMin, name, stepAmountMin, newBase);
+		newPath[1] = genNewData(datasetMin, name, stepAmountHour, newBase);
+		newPath[2] = genNewData(datasetMin, name, stepAmountDay, newBase);
+
+		d3.selectAll(node.childNodes)
+			.data(newPath)
+			.selectAll("g")
+			.data(function(d) { return d; })
+			.transition()
+			.select("path")
+			.attr("d",function(d){
+				return line(d);
+			})
+			.style({'fill-opacity':function(d,i){
+				if(pathOrder[i] == name){
+					return 1;
+				}
+				else{
+					return 0.6;
+				}
+			}});
+	}
+
+	function drawWindow(svg,dataset,left,right,wtype){
+		var stepAmount = (right - left)/step;
+		pathData = genStreamData(dataset, stepAmount);
+
+		svg.append("g")
+			.attr("class",wtype)
+			.selectAll("g")
+			.data(pathData)
+			.enter()
+			.append("g")
+			.append("path")
+			.attr("d",function(d){
+				return line(d);
+			})
+			.attr("transform", "translate("+left+",0)")
+			.style({'fill':function(d,i){return colorTable[colorsInOrder[i]%colorNum]} 
+					,'fill-opacity':0.8})
+			.on("mouseenter",function(d,i){
+				mouseenter(pathOrder[i], this.parentNode.parentNode.parentNode);
+			})
+			.on("mouseleave",function(d,i){
+				sleep(50);
+				mouseleave(this.parentNode.parentNode.parentNode)
+			});
+	}
+
+	function timeTostr(i){
+		if(time_hour[i]<10){
+			hour = "0"+time_hour[i].toString();
+		}
+		else{
+			hour = time_hour[i].toString();
+		}
+		if(time_min[i]<10){
+			min = "0"+time_min[i].toString();
+		}
+		else{
+			min = time_min[i].toString();
+		}
+
+		return hour+":"+min;
+	}
+
+	function sleep(d){
+		for(var t = Date.now();Date.now() - t <= d;);
+	}
+
+	function drawAxis(svg){
+		var xScale = [];
+		var xAxis = [];
+		var left = [];
+		var padding = 7;
+		var virtualData = [1,2,3];
+
+		xScale[0] = d3.scale.linear().domain([0,rightMin-leftMin]).range([0,rightMin-leftMin-padding]);
+		xScale[1] = d3.scale.linear().domain([0,rightHour-leftHour]).range([0,rightHour-leftHour-padding]);
+		xScale[2] = d3.scale.linear().domain([0,rightDay-leftDay]).range([0,rightDay-leftDay-padding]);
+
+		left[0] = leftMin+1;
+		left[1] = leftHour+1;
+		left[2] = leftDay+1;
+
+		for(i=0; i<3; i++){
+			xAxis = d3.svg.axis()
+				.scale(xScale[i])
+				.orient("bottom")
+				.ticks(0);
+
+			svg.append("g")
+				.attr("class","axis")
+				.attr("id","axis_"+i)
+				.attr("transform", "translate("+left[i]+","+height+")")
+				.call(xAxis)
+		}
+
+		left[0] = leftMin+1;
+		left[1] = rightMin-padding/2;
+		left[2] = rightHour-padding/2;
+		left[3] = rightDay-padding/2;
+
+		svg.append("g")
+			.attr("class","axis")
+			.attr("id","axis_text")
+			.attr("transform", "translate(0,"+height+")");
+
+		var g_text = document.getElementById("axis_text");
+		
+		for(i=0; i<4; i++){
+			d3.select(g_text)
+				.selectAll("text")
+				.data(left)
+				.enter()
+				.append("text")
+				.text(function(d,i){
+					return timeTostr(i);
+				})
+				.attr("x",function(d){return d})
+				.attr("y",16)
+				.style({"text-anchor": "middle"});
+		}
+
+	}
+
+	function ready(){
+		datasetMin = genTestData();
+
+		var svg = d3.select("#svg-use")
+			.append("svg")
+			.attr("id","svg")
+			.attr("width",width)
+			.attr("height",height+25);
+
+		drawWindow(svg,datasetMin,leftMin,rightMin,'Min');
+		drawWindow(svg,datasetMin,leftHour,rightHour,'Hour');
+		drawWindow(svg,datasetMin,leftDay,rightDay,'Day');
+
+		drawAxis(svg);
+	}
+	</script>
+	<style type="text/css">
+	</style>
+</head>
+<body onload="ready()">
+	<h2	align="center">微博排行榜可视化</h2>
+	<div id = "svg-use"></div>
+
+</body>
+</html>
