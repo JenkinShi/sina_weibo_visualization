@@ -3,7 +3,8 @@
 <head>
 	<meta charset="utf-8">
 	<title>Drawing Curves</title>
-	<script type="text/javascript" src="../js/d3.min.js"></script>
+	<script type="text/javascript" src="./js/_VisualSedimentation.js"></script>
+	
 	<style type="text/css">
 		
 		.axis path,
@@ -13,7 +14,7 @@
 			shape-rendering: crispEdges;
 		}
 		
-		.axis text {
+		.axis, #second-clock text {
 			font-family: sans-serif;
 			font-size: 13px;
 		}
@@ -22,26 +23,41 @@
 	<script type="text/javascript">
 	var width = 800;
 	var height = 320;
-	var step = 5;
+	var marginTop;
+	var marginBottom = 25;
+	var step = 4;
 	var colorNum = 20;
 	var colorTable = ['#C0C0C0','#F0C0F0','#E3CF57','#FF6103','#B0E0E6',
 					'#D2691E','#00C957','#808069','#FFC0CB','#3D59AB',
 					'#8A2BE2','#7CFC00','#FF8000','#03A89E','#FF4500',
 					'#de9c53','#823635','#89bebe','#c51f1f','#113f3d'];
 	var datasetMin = [], datasetHour = [], datasetDay = [];
-	var intervel = 1.5;
+	var intervel = 0.5;
 	var offsetFirst;
 	var leftMin=100, rightMin=250, leftHour=251, rightHour=501, leftDay=502, rightDay=782;
-	var stepAmountMin = (rightMin - leftMin)/step;
-	var stepAmountHour = (rightHour - leftHour)/step;
-	var stepAmountDay = (rightDay - leftDay)/step;
+	var stepAmountMin = Math.floor((rightMin - leftMin)/step);
+	var stepAmountHour = Math.floor((rightHour - leftHour)/step);
+	var stepAmountDay = Math.floor((rightDay - leftDay)/step);
 
 	//var namesInOrder = ['a','b','c'];
 	var colorsInOrder = [5,2, 4, 3,1];
 	var pathOrder = ['b','e','a','c','d'];
 	var recentTopic = ['b','c','d'];
-	var time_hour = [1,2,3,4];
-	var time_min = [0,23,45,12];
+	var recnetColorsInOrder = [5, 3, 1];
+	var recentHot = [1112,2231,1321];
+	var recentTime = 267;
+	var time_density = [1,5,10]
+	var time_minute = [];
+
+	var sceneSettings;
+	var barChart;
+	var barHeight = 300;
+	var barWidth = 80;
+	var maxData;
+	var totalHeight = 0;
+	var second = 12;
+	var posTwoDaysBetween;
+
 
 	var line = d3.svg.line()
 			.x(function(d){return d.x;})
@@ -98,7 +114,7 @@
 				term.y = i/4;
 			}
 			else{
-				term.state = 0;
+				term.state = 1;
 				term.x = i;
 				term.y = i/20+20;
 			}
@@ -114,23 +130,56 @@
 
 	function genPathFromOffset(offset, stepAmount, dataset){
 		path = [];
+		var flag;
 		for(i=0; i<pathOrder.length; i++){
+			flag = 0;
 			name = pathOrder[i];
-			onePath = [];
+			twoPath = [[],[]];
 			for(j=0; j<stepAmount; j++){
-				term = new Object();
-				term.x = j*step;
-				term.y = offset[j];
-				onePath.push(term);
+				if(dataset[name][j].state == 1){
+					if(flag == 0){
+						var term = new Object();
+
+						flag = 1;
+						term.x = j*step;
+						term.y = offset[j]+dataset[name][j].y;
+						twoPath[0].push(term);
+					}
+					var term = new Object();
+					term.x = j*step;
+					term.y = offset[j];
+					twoPath[0].push(term);
+				}
+				else if(dataset[name][j].state == 2){
+					var term = new Object();
+					term.x = j*step;
+					term.y = offset[j];
+					twoPath[1].push(term);
+				}
 			}
 			for(j=stepAmount-1; j>=0; j--){
-				term = new Object();
-				term.x = j*step;
-				term.y = offset[j]+dataset[name][j].y;
-				onePath.push(term);
-				offset[j] = offset[j] + dataset[name][j].y+intervel;
+				if(dataset[name][j].state == 1){
+					var term = new Object();
+					term.x = j*step;
+					term.y = offset[j]+dataset[name][j].y;
+					twoPath[0].push(term);
+					offset[j] = offset[j] + dataset[name][j].y+intervel;
+				}
+				else if(dataset[name][j].state == 2){
+					var term = new Object();
+					term.x = j*step;
+					term.y = offset[j]+dataset[name][j].y;
+					twoPath[1].push(term);
+					offset[j] = offset[j] + dataset[name][j].y+intervel;
+				}
 			}
-			path[i] = onePath;
+
+			var term = new Object();
+			term.x = 0;
+			term.y = offset[0]+dataset[name][0].y;
+			twoPath[1].push(term);
+
+			path[i] = twoPath;
 		}
 
 		return path;
@@ -169,7 +218,7 @@
 				ceiling += dataset[pathOrder[i]][j].y + intervel;
 				i++;
 			}
-			if(pathOrder.indexOf(name)<pathOrder.length/2){
+			if(pathOrder.indexOf(name)<(pathOrder.length-1)/2){
 				ceiling += dataset[pathOrder[i]][j].y;
 			}
 			//ceiling += dataset[pathOrder[i]][j].y/2;
@@ -180,35 +229,54 @@
 		return path;
 	}
 
-	function mouseleave(node){
+	function mouseleave(){
 		var newPath = [];
 
 		newPath[0] = genStreamData(datasetMin, stepAmountMin);
 		newPath[1] = genStreamData(datasetMin, stepAmountHour);
 		newPath[2] = genStreamData(datasetMin, stepAmountDay);
 
-		d3.selectAll(node.childNodes)
+		d3.selectAll(".layer")
 			.data(newPath)
 			.selectAll("g")
 			.data(function(d) { return d; })
+			.style({"stroke":"none"})
+			.selectAll("path")
+			.data(function(d) { return d; })
 			.transition()
-			.select("path")
+			.duration(1000)
 			.attr("d",function(d){
 				return line(d);
-			})
-			.style({'fill-opacity':0.8});
+			});
+
+		d3.selectAll(".one_bar")
+			.style({
+				"border":function(d,i){
+					if(recentTopic[i] == name){
+						return "none";
+					}
+				},
+				"width":function(d,i){
+					return barWidth+"px";
+				},
+				"height":function(d,i){
+					var h = totalHeight*recentHot[i]/d3.sum(recentHot);
+					return h+"px";
+				},
+		});
 	}
 
-	function mouseenter(name, node){
+	function mouseenter(name){
 		var newPath = [];
 		var newBase = offsetFirst;
+		var selected;
 		i = 0;
 
 		while(pathOrder[i] != name){
 			newBase += datasetMin[pathOrder[i]][0].y + intervel;
 			i++;
 		}
-		if(pathOrder.indexOf(name)<pathOrder.length/2){
+		if(pathOrder.indexOf(name)<(pathOrder.length-1)/2){
 			newBase += dataset[pathOrder[i]][0].y;
 		}
 		// newBase += dataset[pathOrder[i]][0].y/2;
@@ -217,63 +285,105 @@
 		newPath[1] = genNewData(datasetMin, name, stepAmountHour, newBase);
 		newPath[2] = genNewData(datasetMin, name, stepAmountDay, newBase);
 
-		d3.selectAll(node.childNodes)
+		d3.selectAll(".layer")
 			.data(newPath)
 			.selectAll("g")
 			.data(function(d) { return d; })
+			.style({'stroke':function(d,i){
+				if(pathOrder[i] == name){
+					return 'red';
+				}
+			}})
+			.selectAll("path")
+			.data(function(d) { return d; })
 			.transition()
-			.select("path")
+			.duration(1000)
 			.attr("d",function(d){
 				return line(d);
-			})
-			.style({'fill-opacity':function(d,i){
-				if(pathOrder[i] == name){
-					return 1;
-				}
-				else{
-					return 0.6;
-				}
-			}});
+			});
+
+		d3.selectAll(".one_bar")
+			.style({
+				"border":function(d,i){
+					if(recentTopic[i] == name){
+						return "2px solid #f00";
+					}
+				},
+				"width":function(d,i){
+					if(recentTopic[i] == name){
+						return (barWidth-4)+"px";
+					}
+					else{
+						return barWidth;	
+					}
+				},
+				"height":function(d,i){
+					var h = totalHeight*recentHot[i]/d3.sum(recentHot);
+					if(recentTopic[i] == name){
+						return (h-4)+"px";
+					}
+					else{
+						return h;
+					}
+				},
+				"z-index":20
+		});
 	}
 
-	function drawWindow(svg,dataset,left,right,wtype){
-		var stepAmount = (right - left)/step;
+	function drawWindow(svg,dataset,left,right,stepAmount){
 		pathData = genStreamData(dataset, stepAmount);
 
 		svg.append("g")
-			.attr("class",wtype)
+			.attr("class","layer")
 			.selectAll("g")
 			.data(pathData)
 			.enter()
 			.append("g")
+			.style({'fill':function(d,i){return colorTable[colorsInOrder[i]%colorNum]},
+					})
+			.on("mouseenter",function(d,i){
+				mouseenter(pathOrder[i]);
+			})
+			.on("mouseleave",function(d,i){
+				//sleep(50);
+				mouseleave()
+			})
+			.selectAll("path")
+			.data(function(d){return d;})
+			.enter()
 			.append("path")
 			.attr("d",function(d){
 				return line(d);
 			})
 			.attr("transform", "translate("+left+",0)")
-			.style({'fill':function(d,i){return colorTable[colorsInOrder[i]%colorNum]} 
-					,'fill-opacity':0.8})
-			.on("mouseenter",function(d,i){
-				mouseenter(pathOrder[i], this.parentNode.parentNode.parentNode);
-			})
-			.on("mouseleave",function(d,i){
-				sleep(50);
-				mouseleave(this.parentNode.parentNode.parentNode)
+			.style({'fill-opacity':function(d,i){
+				if(i==1){
+					return 0;
+				}},
+				'stroke':function(d,i){
+				if(i==1){
+					return 'none';
+				}},
+				'stroke-width':function(d,i){
+				if(i==0){
+					return 2;
+				}},
 			});
 	}
 
 	function timeTostr(i){
-		if(time_hour[i]<10){
-			hour = "0"+time_hour[i].toString();
+		var hour,min;
+		if((time_minute[i]/60)<10){
+			hour = "0"+(Math.floor(time_minute[i]/60)).toString();
 		}
 		else{
-			hour = time_hour[i].toString();
+			hour = (Math.floor(time_minute[i]/60)).toString();
 		}
-		if(time_min[i]<10){
-			min = "0"+time_min[i].toString();
+		if((time_minute[i]%60)<10){
+			min = "0"+(Math.floor(time_minute[i]%60)).toString();
 		}
 		else{
-			min = time_min[i].toString();
+			min = (Math.floor(time_minute[i]%60)).toString();
 		}
 
 		return hour+":"+min;
@@ -289,6 +399,8 @@
 		var left = [];
 		var padding = 7;
 		var virtualData = [1,2,3];
+
+		calTime();
 
 		xScale[0] = d3.scale.linear().domain([0,rightMin-leftMin]).range([0,rightMin-leftMin-padding]);
 		xScale[1] = d3.scale.linear().domain([0,rightHour-leftHour]).range([0,rightHour-leftHour-padding]);
@@ -337,22 +449,257 @@
 				.style({"text-anchor": "middle"});
 		}
 
+
+
+		svg.append("g")
+			.attr("id","day-line")
+			.attr("transform","translate("+0+","+(height)+")")
+			.selectAll("path")
+			.data([[leftMin,posTwoDaysBetween],[posTwoDaysBetween,rightDay-padding+2]])
+			.enter()
+			.append("path")
+			.attr("d",function(d){
+				return d3.svg.line()
+							.x(function(d){return d})
+							.y(function(d){return 0})
+							.interpolate("linear")(d);
+			})
+			.style({
+				"stroke":function(d,i){
+					if(i==0){
+						return "orange";
+					}
+					else{
+						return "blue";
+					}
+				},
+				"stroke-width":"2px"
+			});
 	}
+
+
+	function mouseMove(e){
+		var div = document.getElementById("WhiteLine");
+		var x = e.clientX;
+
+		d3.select('#WhiteLine')
+			.style({'left':''+(parseInt(x)+5)+'px'});
+	}
+
+	function drawLine(){
+		d3.select('#svg-use')
+			.append("div")
+			.attr('id','WhiteLine')
+			.style({'background-color':'White',
+					'height':'340px',
+					'top':marginTop+'px',
+					'left':'100px',
+					'width':'1px',
+					'position':'absolute'
+				});
+	}
+
+	function flocculate(_this){
+	  	_this.selectAll().flocculate();
+	  	_this.strata.update(_this);
+	}
+
+	function createToken(_this, i, data){
+        var token = {
+          	category:0,
+          	fillStyle:colorTable[recnetColorsInOrder[i]],
+          	size:data,
+          	callback:{
+          	}
+        }
+        _this.addToken(token);
+    }
+
+    function updateTopicBar(){
+        var topic_bar = d3.select('#topic_bar');
+        var dataset = [];
+        var total_height = 0;
+
+        for(i=0; i<recentTopic.length; i++){
+          	var term = new Object();
+          	term.height = recentHot[i];
+          	term.color = recnetColorsInOrder[i];
+          	term.bottom = total_height;
+          	dataset.push(term);
+          	total_height += recentHot[i];
+        }
+
+        topic_bar.selectAll("div")
+          	.data(dataset)
+          	.style({
+            	'height':function(d){ return d.height*totalHeight/total_height+'px'; },
+            	'bottom':function(d){ return d.bottom*totalHeight/total_height+'px'; },
+            	'background-color':function(d){ return colorTable[d.color]; }
+          	});
+    }
+
+	function initBar(){
+		var bar_height_now;
+		var max_hot;
+
+		marginTop = $("#svg-use").offset().top
+		maxData = recentTopic.length * 14;
+		bar_height_now = Math.floor(second/5)*recentTopic.length;
+	  	totalHeight = bar_height_now*barHeight/maxData;
+
+	  	max_hot = d3.max(recentHot);
+
+	  	sceneSettings = {
+	  	x:0,
+	  	y:0,
+	  	width:barWidth,
+	  	height:barHeight,
+	  	spacer:0,
+	  	data:{
+	        model:[{label:"total"}],
+	        strata:[[{initValue:bar_height_now,label:"Strata"}]],
+	        stream:{provider:'token',refresh:1000/6}
+	  	},
+	  	sedimentation:{
+	    	token:{
+	      		size:{minimum:2}
+	    	},
+	    	suspension:{
+	      		decay:{power:1},
+	    	},
+	    	aggregation:{
+	      		height:barHeight,
+	      		maxData:maxData,
+	    	}
+	  	}};
+
+		barChart = $("#barChart").vs(sceneSettings).data('visualSedimentation');
+
+		for(i=0; i<recentTopic.length; i++){
+	  		createToken(barChart,i,recentHot[i]*10/max_hot);
+		}
+
+		d3.select("#barChart")
+		  	.select("div")
+		  	.style({'position':'absolute','top':marginTop});
+
+
+		d3.select('#svg-use')
+		  	.append("div")
+		  	.style({
+		    	'width':barWidth+'px',
+			    'height':barHeight+'px',
+			    'position':'absolute',
+		    	'top':marginTop+'px'
+		  	})
+		  	.append("div")
+		  	.attr("id","topic_bar")
+		  	.style({
+		    	'width':'100%',
+		    	'height':'100%',
+		    	'position':'relative',
+			})
+		  	.selectAll("div")
+		  	.data(recentHot)
+		  	.enter()
+		  	.append("div")
+		  	.attr("class","one_bar")
+		  	.style({
+		    	'width':barWidth+"px",
+		    	'height':'0px',
+		    	'position':'absolute',
+		    	'bottom':'0px',
+		    	'background-color':'#999999',
+		    	'z-index':20
+		  	})
+		  	.on("mouseenter",function(d,i){
+		  		mouseenter(recentTopic[i]);
+		  	})
+		  	.on("mouseleave",function(d,i){
+		  		mouseleave();
+		  	});
+
+		updateTopicBar();
+
+		d3.select("#svg")
+			.append("g")
+			.attr("id","second-clock")
+			.attr("transform", "translate(0,"+height+")")
+			.append("text")
+			.text(second+"s")
+			.attr('x',barWidth/2)
+			.attr('y',16)
+			.style({"text-anchor":"middle"});
+	}
+
+	function calTime(){
+		var time = recentTime;
+		time_minute[0] = time;
+		if(time < time_density[0]*Math.floor((rightMin-leftMin)/step)){
+			posTwoDaysBetween = leftMin + (time/time_density[0])*step;
+			time = time - time_density[0]*Math.floor((rightMin-leftMin)/step) + 24*60;
+		}
+		else{
+			time = time - time_density[0]*Math.floor((rightMin-leftMin)/step);
+		}
+		time_minute[1] = time;
+		if(time < time_density[1]*Math.floor((rightHour-leftHour)/step)){
+			posTwoDaysBetween = leftHour + (time/time_density[1])*step;
+			time = time - time_density[1]*Math.floor((rightHour-leftHour)/step) + 24*60;
+		}
+		else{
+			time = time - time_density[1]*Math.floor((rightHour-leftHour)/step);
+		}
+		time_minute[2] = time;
+		if(time < time_density[2]*Math.floor((rightDay-leftDay)/step)){
+			posTwoDaysBetween = leftDay + (time/time_density[2])*step;
+			time = time - time_density[2]*Math.floor((rightDay-leftDay)/step) + 24*60;
+		}
+		else{
+			time = time - time_density[2]*Math.floor((rightDay-leftDay)/step);
+		}
+		time_minute[3] = time;
+	}
+
+	function update(){
+		var max_hot = d3.max(recentHot);
+
+        if((second % 5) == 0) {
+          	totalHeight += recentTopic.length*barHeight/maxData;
+          	flocculate(barChart);
+          	updateTopicBar();
+          	for(i=0; i<recentTopic.length; i++){
+           	 	createToken(barChart,i,recentHot[i]*10/max_hot);
+          	}
+        }
+        second++;
+
+        d3.select("#second-clock")
+        	.select("text")
+        	.text(second+"s");
+    }
 
 	function ready(){
 		datasetMin = genTestData();
 
 		var svg = d3.select("#svg-use")
+			.on("mousemove",function(){mouseMove(event);})
 			.append("svg")
 			.attr("id","svg")
 			.attr("width",width)
-			.attr("height",height+25);
+			.attr("height",height+marginBottom);
 
-		drawWindow(svg,datasetMin,leftMin,rightMin,'Min');
-		drawWindow(svg,datasetMin,leftHour,rightHour,'Hour');
-		drawWindow(svg,datasetMin,leftDay,rightDay,'Day');
+		initBar();
+
+		drawWindow(svg,datasetMin,leftMin,rightMin,stepAmountMin);
+		drawWindow(svg,datasetMin,leftHour,rightHour,stepAmountHour);
+		drawWindow(svg,datasetMin,leftDay,rightDay,stepAmountDay);
+
+		drawLine();
 
 		drawAxis(svg);
+
+		setInterval(update, 1000);
 	}
 	</script>
 	<style type="text/css">
@@ -360,7 +707,7 @@
 </head>
 <body onload="ready()">
 	<h2	align="center">微博排行榜可视化</h2>
+	<div id="barChart"></div>
 	<div id = "svg-use"></div>
-
 </body>
 </html>
