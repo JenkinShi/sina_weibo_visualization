@@ -33,6 +33,7 @@
 					'#de9c53','#823635','#89bebe','#c51f1f','#113f3d'];
 	var dataset_whole = [];
 	var intervel = 0.5;
+
 	var left_pos = [100, 251, 502];
 	var right_pos = [250, 501, 782];
 	var step_amount = [];
@@ -207,7 +208,6 @@
 			else{
 				if(pathOrder.indexOf(name)<(pathOrder.length-1)/2){
 					ceiling += dataset[pathOrder[i]][j].y;
-
 				}
 			}
 			offset[j] = base - ceiling;
@@ -216,6 +216,27 @@
 		
 		return path;
 	}
+
+	// function genNewData(dataset, name, stepAmount, base){
+	// 	var offset = [];
+
+	// 	for(j=0; j<stepAmount; j++){
+	// 		ceiling = 0;
+	// 		i = 0;
+	// 		while(pathOrder[i] != name){
+	// 			ceiling += dataset[pathOrder[i]][j].y + intervel;
+	// 			i++;
+	// 		}
+	// 		if(pathOrder.indexOf(name)<(pathOrder.length-1)/2){
+	// 			ceiling += dataset[pathOrder[i]][j].y;
+	// 		}
+	// 		//ceiling += dataset[pathOrder[i]][j].y/2;
+	// 		offset[j] = base - ceiling;
+	// 	}
+
+	// 	path = genPathFromOffset(offset, stepAmount, dataset);
+	// 	return path;
+	// }
 
 	function mouseleave(){
 		var newPath = [];
@@ -756,6 +777,7 @@
     }
 
 	function ready(){
+
 		var i;
 
 		for(i=0; i<3; i++){
