@@ -33,7 +33,6 @@
 					'#de9c53','#823635','#89bebe','#c51f1f','#113f3d'];
 	var datasetMin = [], datasetHour = [], datasetDay = [];
 	var intervel = 0.5;
-	var offsetFirst;
 	var leftMin=100, rightMin=250, leftHour=251, rightHour=501, leftDay=502, rightDay=782;
 	var stepAmountMin = Math.floor((rightMin - leftMin)/step);
 	var stepAmountHour = Math.floor((rightHour - leftHour)/step);
@@ -64,40 +63,40 @@
 			.y(function(d){return height - d.y;})
 			.interpolate("linear");
 
-	function genTestData(){
+	function genTestData(lStep,rStep){
 		dataset = [];
 		data0 = [];
 		data1 = [];
 		data2 = [];
 		data3 = [];
 		data4 = [];
-		for(i=0;i<width;i+=step){
+		for(i=lStep;i<rStep;i+=1){
 			var term = new Object();
 			term.state = 1;
 			term.x = i;
-			term.y = Math.abs(Math.sin(i*3.14/200)*50);
+			term.y = Math.abs(Math.sin(i*3.14/40)*50);
 			data0.push(term);
 		}
-		for(i=0;i<width;i+=step){
+		for(i=lStep;i<rStep;i+=1){
 			var term = new Object();
 			term.state = 1;
 			term.x = i;
-			term.y = Math.sin(i*3.14/400)*20+30;
+			term.y = Math.sin(i*3.14/70)*20+30;
 			data1.push(term);
 		}
-		for(i=0;i<width;i+=step){
+		for(i=lStep;i<rStep;i+=1){
 			var term = new Object();
 			term.state = 1;
 			term.x = i;
 			term.y = 50;
 			data2.push(term);
 		}
-		for(i=0;i<width;i+=step){
+		for(i=lStep;i<rStep;i+=1){
 			var term = new Object();
-			if(i<100){
+			if(i<20){
 				term.state = 1;
 				term.x = i;
-				term.y = i/3 +20; 
+				term.y = -1.5*i +50; 
 			}
 			else{
 				term.state = 0;
@@ -106,17 +105,17 @@
 			}
 			data3.push(term);
 		}
-		for(i=0;i<width;i+=step){
+		for(i=lStep;i<rStep;i+=1){
 			var term = new Object();
-			if(i<100){
+			if(i<20){
 				term.state = 2;
 				term.x = i;
-				term.y = i/4;
+				term.y = i;
 			}
 			else{
 				term.state = 1;
 				term.x = i;
-				term.y = i/20+20;
+				term.y = i/10+18;
 			}
 			data4.push(term);
 		}
@@ -185,31 +184,10 @@
 		return path;
 	}
 
-	function genStreamData(dataset, stepAmount){
+	function genStreamData(dataset, name, stepAmount, base, flag){
 		var offset = [];
 		var ceiling;
 		var path = [];
-		var nameCenter = pathOrder[Math.floor((pathOrder.length)/2)];
-		var base = 0;
-
-		for(j=0; j<stepAmount; j++){
-			ceiling = 0;
-			i = 0;
-			while(pathOrder[i] != nameCenter){
-				ceiling += dataset[pathOrder[i]][j].y + intervel;
-				i++;
-			}
-			ceiling += dataset[pathOrder[i]][j].y/2;
-			offset[j] = height/2 - ceiling;
-		}
-		offsetFirst = offset[0];
-		path = genPathFromOffset(offset, stepAmount, dataset);
-		
-		return path;
-	}
-
-	function genNewData(dataset, name, stepAmount, base){
-		var offset = [];
 
 		for(j=0; j<stepAmount; j++){
 			ceiling = 0;
@@ -218,23 +196,48 @@
 				ceiling += dataset[pathOrder[i]][j].y + intervel;
 				i++;
 			}
-			if(pathOrder.indexOf(name)<(pathOrder.length-1)/2){
-				ceiling += dataset[pathOrder[i]][j].y;
+			if(flag == 0){
+				ceiling += dataset[pathOrder[i]][j].y/2;
 			}
-			//ceiling += dataset[pathOrder[i]][j].y/2;
+			else{
+				if(pathOrder.indexOf(name)<(pathOrder.length-1)/2){
+					ceiling += dataset[pathOrder[i]][j].y;
+				}
+			}
 			offset[j] = base - ceiling;
 		}
-
 		path = genPathFromOffset(offset, stepAmount, dataset);
+		
 		return path;
 	}
+
+	// function genNewData(dataset, name, stepAmount, base){
+	// 	var offset = [];
+
+	// 	for(j=0; j<stepAmount; j++){
+	// 		ceiling = 0;
+	// 		i = 0;
+	// 		while(pathOrder[i] != name){
+	// 			ceiling += dataset[pathOrder[i]][j].y + intervel;
+	// 			i++;
+	// 		}
+	// 		if(pathOrder.indexOf(name)<(pathOrder.length-1)/2){
+	// 			ceiling += dataset[pathOrder[i]][j].y;
+	// 		}
+	// 		//ceiling += dataset[pathOrder[i]][j].y/2;
+	// 		offset[j] = base - ceiling;
+	// 	}
+
+	// 	path = genPathFromOffset(offset, stepAmount, dataset);
+	// 	return path;
+	// }
 
 	function mouseleave(){
 		var newPath = [];
 
-		newPath[0] = genStreamData(datasetMin, stepAmountMin);
-		newPath[1] = genStreamData(datasetMin, stepAmountHour);
-		newPath[2] = genStreamData(datasetMin, stepAmountDay);
+		newPath[0] = genStreamData(datasetMin, pathOrder[Math.floor((pathOrder.length)/2)], stepAmountMin, height/2, 0);
+		newPath[1] = genStreamData(datasetHour, pathOrder[Math.floor((pathOrder.length)/2)], stepAmountHour, height/2, 0);
+		newPath[2] = genStreamData(datasetDay, pathOrder[Math.floor((pathOrder.length)/2)], stepAmountDay, height/2, 0);
 
 		d3.selectAll(".layer")
 			.data(newPath)
@@ -268,7 +271,7 @@
 
 	function mouseenter(name){
 		var newPath = [];
-		var newBase = offsetFirst;
+		var newBase = 0;
 		var selected;
 		i = 0;
 
@@ -282,8 +285,8 @@
 		// newBase += dataset[pathOrder[i]][0].y/2;
 
 		newPath[0] = genNewData(datasetMin, name, stepAmountMin, newBase);
-		newPath[1] = genNewData(datasetMin, name, stepAmountHour, newBase);
-		newPath[2] = genNewData(datasetMin, name, stepAmountDay, newBase);
+		newPath[1] = genNewData(datasetHour, name, stepAmountHour, newBase);
+		newPath[2] = genNewData(datasetDay, name, stepAmountDay, newBase);
 
 		d3.selectAll(".layer")
 			.data(newPath)
@@ -331,7 +334,7 @@
 	}
 
 	function drawWindow(svg,dataset,left,right,stepAmount){
-		pathData = genStreamData(dataset, stepAmount);
+		pathData = genStreamData(dataset, pathOrder[Math.floor((pathOrder.length)/2)], stepAmount, height/2, 0);
 
 		svg.append("g")
 			.attr("class","layer")
@@ -680,7 +683,12 @@
     }
 
 	function ready(){
-		datasetMin = genTestData();
+		var stepNumMin = Math.floor((rightMin-leftMin)/step)+1;
+		var stepNumHour = Math.floor((rightHour-leftHour)/step)+1;
+		var stepNumDay = Math.floor((rightDay-leftDay)/step)+1;
+		datasetMin = genTestData(0,stepNumMin);
+		datasetHour = genTestData(stepNumMin-1,stepNumMin+stepNumHour-1);
+		datasetDay = genTestData(stepAmountMin+stepNumHour-2,stepNumMin+stepNumHour+stepNumDay-2);
 
 		var svg = d3.select("#svg-use")
 			.on("mousemove",function(){mouseMove(event);})
@@ -692,8 +700,8 @@
 		initBar();
 
 		drawWindow(svg,datasetMin,leftMin,rightMin,stepAmountMin);
-		drawWindow(svg,datasetMin,leftHour,rightHour,stepAmountHour);
-		drawWindow(svg,datasetMin,leftDay,rightDay,stepAmountDay);
+		drawWindow(svg,datasetHour,leftHour,rightHour,stepAmountHour);
+		drawWindow(svg,datasetDay,leftDay,rightDay,stepAmountDay);
 
 		drawLine();
 
