@@ -8,6 +8,7 @@ function topic_river(){
 	const std_per_stack_width = 7;
 	const std_per_river_width = 15;
 	const std_streaming_width = 20;
+	const std_streaming_vertical_intervel = 2;
 	const colorTable = ['#C0C0C0','#F0C0F0','#E3CF57','#FF6103','#B0E0E6',
 					'#D2691E','#00C957','#808069','#FFC0CB','#3D59AB',
 					'#8A2BE2','#7CFC00','#FF8000','#03A89E','#FF4500',
@@ -15,10 +16,14 @@ function topic_river(){
 	const river_intervel_rate_node = [0.6,1.5];
 	const river_intervel_rate_half = [0.35,0.6];
 	var streaming_token_num = 0;
-	var streaming_topic_start_x = new Map();
+	var streaming_accumulate;
+	var streaming_topic_start_y;
+	var streaming_topic_end_y;
+	var streaming_per_width;
+	var streaming_last_y;
 
 	function real_height(h){
-		return h*settings.graph_height/std_height;
+		return h*(settings.graph_height-settings.text_height)/std_height;
 	}
 	function real_width(w){
 		return w*settings.graph_width/std_width;
@@ -223,11 +228,12 @@ function topic_river(){
 					+std_archive_width
 					+std_per_stack_width*3
 					+std_per_river_width*3;
-		var finish_x = start_x+std_streaming_width;
+		var end_x = start_x+std_streaming_width;
 		var new_topic = [];
-		var flag=0;
-		var length = 0;
+		var name;
 		var i,j;
+		var now_x = streaming_per_width*streaming_token_num;
+		var last_x = streaming_per_width*(streaming_token_num-1);
 
 		//找出是否有新话题出现
 		for(var x in token){
@@ -239,6 +245,64 @@ function topic_river(){
 				}
 			}
 		}
+		j = 0;
+		for(i=0; i<tg.topic_order.length; i++){
+			name = tg.topic_order[i];
+			if(token[name] == undefined){
+				var new_name = new_topic[j];
+				var new_last_y = streaming_last_y.get(name)
+									-value2len(streaming_accumulate[streaming_token_num-1][name])/2
+									-value2len(token[new_name]/2);
+				var new_start_y = get_new_curve_start_y(
+									last_x,
+									new_last_y,
+									end_x,
+									streaming_topic_end_y.get(name),
+									(start_x+end_x)/2);
+				var new_end_y = streaming_topic_end_y.get(name);
+				var new_now_y = get_curve_y(
+									real_width(start_x),
+									new_start_y,
+									real_width(end_x),
+									new_end_y,
+									now_x);
+				draw_streaming_path(
+					last_x,
+					new_last_y,
+					now_x,
+					new_now_y,
+					value2len(token[new_name]),
+					value2len(token[new_name])
+				);
+				//建立新话题
+				streaming_topic_start_y.set(new_name,new_start_y);
+				streaming_topic_end_y.set(new_name,new_end_y);
+				streaming_last_y.set(new_name,new_now_y);
+				//删除旧话题
+				streaming_topic_start_y.delete(name);
+				streaming_topic_end_y.delete(name);
+				streaming_last_y.delete(name);
+				//更新topic_order
+				tg.topic_order[i] = new_topic[j];
+				j++;
+			}
+			else{
+				draw_streaming_path(
+					last_x,
+					streaming_last_y.get(name),
+					now_x,
+					get_curve_y(
+						start_x,
+						streaming_topic_start_y.get(name),
+						end_x,
+						streaming_topic_end_y.get(name),
+						now_x),
+					value2len(streaming_accumulate[streaming_token_num-1][name]),
+					value2len(token[name])
+				);
+			}
+		}
+
 	}
 
 	function init_topic_order(){
@@ -336,15 +400,15 @@ function topic_river(){
 			if(obj[tg.topic_order[i]] == undefined){
 				var o = new Object();
 				o.name = new_topic[j];
-				o.y = length + value2len(obj[new_topic[j]]/2);
+				o.y = length + (1+river_intervel_rate)*value2len(obj[new_topic[j]]/2);
 				j++;
 				topic_pos.push(o);
-				length += value2len(obj[new_topic[j-1]]);
+				length += (2+river_intervel_rate)*value2len(obj[new_topic[j-1]]/2);
 				var o = new Object();
 				o.name = tg.topic_order[i];
 				o.y = length + value2len(last_obj[tg.topic_order[i]]/2);
 				topic_pos.push(o);
-				length += value2len(last_obj[tg.topic_order[i]]);
+				length += (2+river_intervel_rate)*value2len(last_obj[tg.topic_order[i]]/2);
 				tg.topic_order[i] = new_topic[j-1];
 			}
 			else {
@@ -411,16 +475,15 @@ function topic_river(){
 		return topic_pos;
 	}
 
-	function get_broken_curve_y(x1,y1,x2,y2,x0,x){
-		var y0,x3,y3;
+	function get_new_curve_start_y(x1,y1,x2,y2,x0){
+		var y0,y3;
 		var x2_x0_2, x1_x0_2, x1_x0_x2_x0;
 		x2_x0_2 = Math.pow(x2-x0,2);
 		x1_x0_2 = Math.pow(x1-x0,2);
 		x1_x0_x2_x0 = 2*(x1-x0)*(x2-x0);
 		y0 = (x2_x0_2*y1-(x1_x0_2+x1_x0_x2_x0)*y2)/(x2_x0_2-x1_x0_2-x1_x0_x2_x0);
-		x3 = 2*x0 - x2;
 		y3 = 2*y0 - y2;
-		return get_curve_y(x3,y3,x2,y2,x);
+		return y3;
 	}
 
 	function get_curve_y(x1,y1,x2,y2,x){
@@ -793,7 +856,7 @@ function topic_river(){
 			.attr("x1",tg.cut_off_pos[i])
 			.attr("y1",settings.text_height)
 			.attr("x2",tg.cut_off_pos[i])
-			.attr("y2",real_height(std_height))
+			.attr("y2",real_height(std_height)+tg.settings.text_height)
 			.style({"stroke":"rgb(150,150,150)"});
 		}
 	}
@@ -838,14 +901,32 @@ function topic_river(){
 	}
 
 	this.addToken = function(token){
-		var per_stream_width = std_streaming_width/tg.settings.river_data_num;
-
 		if(streaming_token_num == 0){
+			streaming_accumulate = new Array();
+			streaming_topic_start_y = new Map();
+			streaming_topic_end_y= new Map();
+			streaming_last_y = new Map();
+			streaming_per_width = real_width(std_streaming_width/tg.settings.river_data_num);
+
+			var end_y = -std_height/2 + std_streaming_vertical_intervel
+			var delta_y = (-2*end_y)/(tg.settings.topic_count-1)
+			var river_data_length = tg.fix_data.river[2].length;
+			streaming_accumulate.push(tg.fix_data.river[2][river_data_length-1])
 			for(var i=0; i<tg.topic_order.length; i++){
 				var name = tg.topic_order[i];
-				streaming_topic_start_x.set(name, tg.topic_pos_last.topic[name]);
+				var topic_pos_last = tg.topic_pos_last.topic;
+				for(var j=0; j<topic_pos_last.length; j++){
+					if(topic_pos_last[j].name == name){
+						streaming_topic_start_y.set(name, topic_pos_last[j].y);
+						streaming_last_y.set(name, topic_pos_last[j].y);
+						break;
+					}
+				}
+				streaming_topic_end_y.set(name, real_height(end_y));
+				end_y+=delta_y;
 			}
 		}
+		streaming_token_num++;
 		gen_streaming_path(token);
 	}
 
