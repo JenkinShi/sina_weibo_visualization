@@ -1,0 +1,3 @@
+2016-05-09:
+	transaction client: 
+		add the "submit_log.txt" to record the submit information.

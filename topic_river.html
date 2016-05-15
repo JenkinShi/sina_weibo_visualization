@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Drawing Curves</title>
+	<script type="text/javascript" src="./js/topic_river.js"></script>
+</head>
+<body>
+<button id="next_step">单步</button>
+<button id="go_on">执行</button>
+<button id="stop">停止</button>
+<div id="topic_river"></div>
+<div id="weibo_frame" style="position: absolute; right: 50px; top: 445px; width:420px;height:260px; border: 1px solid #adeaea; padding-left: 20px; padding-right: 20px; font-size: 15px">
+	<!-- <iframe src="http://s.weibo.com/weibo/%25E5%2595%25A5.html" width = "1100" height="300" ></iframe> -->
+	<iframe frameborder="no" src="" height="100%" width="100%"></iframe>
+</div>
+</body>
+<script type="text/javascript">
+			// var word_cloud = {
+			// 	'q1':[
+			// 		{"text": ".NET", "size": 31},
+			// 		{"text": "Silverlight", "size": 131},
+			// 		{"text": "jQuery", "size": 111},
+			// 		{"text": "CSS3", "size": 61},
+			// 		{"text": "HTML5", "size": 115},
+			// 		{"text": "JavaScript", "size": 61},
+			// 		{"text": "SQL", "size": 81},
+			// 		{"text": "C#", "size": 100}
+			// 	],
+			// 	'q2':[
+			// 		{"text": ".NET", "size": 31},
+			// 		{"text": "Silverlight", "size": 131},
+			// 		{"text": "jQuery", "size": 331},
+			// 		{"text": "CSS3", "size": 61},
+			// 		{"text": "HTML5", "size": 175},
+			// 		{"text": "JavaScript", "size": 211},
+			// 		{"text": "SQL", "size": 81},
+			// 		{"text": "C#", "size": 100}
+			// 	],
+			// 	'q3':[
+			// 		{"text": ".NET", "size": 31},
+			// 		{"text": "Silverlight", "size": 131},
+			// 		{"text": "jQuery", "size": 331},
+			// 		{"text": "CSS3", "size": 61},
+			// 		{"text": "HTML5", "size": 175},
+			// 		{"text": "JavaScript", "size": 211},
+			// 		{"text": "SQL", "size": 81},
+			// 		{"text": "C#", "size": 100}
+			// 	],
+			// 	'q4':[
+			// 		{"text": ".NET", "size": 31},
+			// 		{"text": "Silverlight", "size": 131},
+			// 		{"text": "jQuery", "size": 331},
+			// 		{"text": "CSS3", "size": 61},
+			// 		{"text": "HTML5", "size": 175},
+			// 		{"text": "JavaScript", "size": 211},
+			// 		{"text": "SQL", "size": 81},
+			// 		{"text": "C#", "size": 100}
+			// 	],
+			// 	'q5':[
+			// 		{"text": ".NET", "size": 31},
+			// 		{"text": "Silverlight", "size": 131},
+			// 		{"text": "jQuery", "size": 331},
+			// 		{"text": "CSS3", "size": 61},
+			// 		{"text": "HTML5", "size": 175},
+			// 		{"text": "JavaScript", "size": 211},
+			// 		{"text": "SQL", "size": 81},
+			// 		{"text": "C#", "size": 100}
+			// 	],
+			// 	'q6':[
+			// 		{"text": ".NET", "size": 31},
+			// 		{"text": "Silverlight", "size": 131},
+			// 		{"text": "jQuery", "size": 331},
+			// 		{"text": "CSS3", "size": 61},
+			// 		{"text": "HTML5", "size": 175},
+			// 		{"text": "JavaScript", "size": 211},
+			// 		{"text": "SQL", "size": 81},
+			// 		{"text": "C#", "size": 100}
+			// 	],
+			// 	'q7':[
+			// 		{"text": ".NET", "size": 31},
+			// 		{"text": "Silverlight", "size": 131},
+			// 		{"text": "jQuery", "size": 331},
+			// 		{"text": "CSS3", "size": 61},
+			// 		{"text": "HTML5", "size": 175},
+			// 		{"text": "JavaScript", "size": 211},
+			// 		{"text": "SQL", "size": 81},
+			// 		{"text": "C#", "size": 100}
+			// 	],
+			// 	'q8':[
+			// 		{"text": ".NET", "size": 31},
+			// 		{"text": "Silverlight", "size": 131},
+			// 		{"text": "jQuery", "size": 331},
+			// 		{"text": "CSS3", "size": 61},
+			// 		{"text": "HTML5", "size": 175},
+			// 		{"text": "JavaScript", "size": 211},
+			// 		{"text": "SQL", "size": 81},
+			// 		{"text": "C#", "size": 100}
+			// 	],
+			// 	'q9':[
+			// 		{"text": ".NET", "size": 31},
+			// 		{"text": "Silverlight", "size": 131},
+			// 		{"text": "jQuery", "size": 331},
+			// 		{"text": "CSS3", "size": 61},
+			// 		{"text": "HTML5", "size": 175},
+			// 		{"text": "JavaScript", "size": 211},
+			// 		{"text": "SQL", "size": 81},
+			// 		{"text": "C#", "size": 100}
+			// 	],
+			// 	'q0':[
+			// 		{"text": ".NET", "size": 31},
+			// 		{"text": "Silverlight", "size": 131},
+			// 		{"text": "jQuery", "size": 331},
+			// 		{"text": "CSS3", "size": 61},
+			// 		{"text": "HTML5", "size": 175},
+			// 		{"text": "JavaScript", "size": 211},
+			// 		{"text": "SQL", "size": 81},
+			// 		{"text": "C#", "size": 100}
+			// 	],
+			// 	'e6':[
+			// 		{"text": ".NET", "size": 31},
+			// 		{"text": "Silverlight", "size": 131},
+			// 		{"text": "jQuery", "size": 331},
+			// 		{"text": "CSS3", "size": 61},
+			// 		{"text": "HTML5", "size": 175},
+			// 		{"text": "JavaScript", "size": 211},
+			// 		{"text": "SQL", "size": 81},
+			// 		{"text": "C#", "size": 100}
+			// 	],
+			// 	'w4':[
+			// 		{"text": ".NET", "size": 31},
+			// 		{"text": "Silverlight", "size": 131},
+			// 		{"text": "jQuery", "size": 331},
+			// 		{"text": "CSS3", "size": 61},
+			// 		{"text": "HTML5", "size": 175},
+			// 		{"text": "JavaScript", "size": 211},
+			// 		{"text": "SQL", "size": 81},
+			// 		{"text": "C#", "size": 100}
+			// 	],
+			// 	'z4':[
+			// 		{"text": ".NET", "size": 31},
+			// 		{"text": "Silverlight", "size": 131},
+			// 		{"text": "jQuery", "size": 331},
+			// 		{"text": "CSS3", "size": 61},
+			// 		{"text": "HTML5", "size": 175},
+			// 		{"text": "JavaScript", "size": 211},
+			// 		{"text": "SQL", "size": 81},
+			// 		{"text": "C#", "size": 100}
+			// 	],
+			// 	'qq4':[
+			// 		{"text": ".NET", "size": 31},
+			// 		{"text": "Silverlight", "size": 131},
+			// 		{"text": "jQuery", "size": 331},
+			// 		{"text": "CSS3", "size": 61},
+			// 		{"text": "HTML5", "size": 175},
+			// 		{"text": "JavaScript", "size": 211},
+			// 		{"text": "SQL", "size": 81},
+			// 		{"text": "C#", "size": 100}
+			// 	],
+			// 	's5':[
+			// 		{"text": ".NET", "size": 31},
+			// 		{"text": "Silverlight", "size": 131},
+			// 		{"text": "jQuery", "size": 111},
+			// 		{"text": "CSS3", "size": 61},
+			// 		{"text": "HTML5", "size": 115},
+			// 		{"text": "JavaScript", "size": 61},
+			// 		{"text": "SQL", "size": 81},
+			// 		{"text": "C#", "size": 100}
+			// 	],
+			// 	'q2':[
+			// 		{"text": ".NET", "size": 31},
+			// 		{"text": "Silverlight", "size": 131},
+			// 		{"text": "jQuery", "size": 331},
+			// 		{"text": "CSS3", "size": 61},
+			// 		{"text": "HTML5", "size": 175},
+			// 		{"text": "JavaScript", "size": 211},
+			// 		{"text": "SQL", "size": 81},
+			// 		{"text": "C#", "size": 100}
+			// 	]
+			// }
+	// var archive_data = [
+	// 	{'q1':100,'q2':120,'z3':80,'qq4':40,'q5':120,'q6':150,'r7':100,'q8':30,'q9':40,'q0':50},
+	// 	{'q1':100,'q2':120,'q3':80,'qq4':40,'q5':120,'q6':150,'r7':100,'q8':30,'q9':40,'q0':50},
+	// 	{'q1':100,'q2':120,'q3':80,'qq4':40,'q5':120,'q6':150,'r7':100,'q8':30,'q9':40,'q0':50},
+	// 	{'q1':100,'q2':120,'q3':80,'qq4':40,'q5':120,'q6':150,'r7':100,'q8':30,'q9':40,'q0':50},
+	// 	{'q1':100,'q2':120,'q3':80,'qq4':40,'q5':120,'q6':150,'r7':100,'q8':30,'q9':40,'q0':50},
+	// 	{'q1':100,'q2':120,'q3':80,'qq4':40,'q5':120,'q6':150,'r7':100,'q8':30,'q9':40,'q0':50},
+	// 	{'q1':100,'q2':120,'q3':80,'qq4':40,'q5':120,'q6':150,'r7':100,'q8':30,'q9':40,'q0':50},
+	// 	{'q1':100,'q2':120,'q3':80,'qq4':40,'q5':120,'q6':150,'r7':100,'q8':30,'q9':40,'q0':50}
+	// ];
+	// var river_data = [
+	// 	[
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5}
+	// 	],
+	// 	[
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'e6':10,'q7':10,'q8':3,'q9':4,'q0':5}
+	// 	],
+	// 	[
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'e6':10,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'e6':9,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'e6':9,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'e6':9,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'e6':9,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'e6':8,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'e6':8,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'e6':8,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'e6':7,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5}
+	// 	],
+	// 	[
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'q4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5}
+	// 	],
+	// 	[
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'w4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'qq4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5}
+	// 	],
+	// 	[
+	// 		{'q1':10,'q2':12,'q3':8,'qq4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'qq4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'qq4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'qq4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'qq4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'qq4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'qq4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'qq4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'qq4':4,'q5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5},
+	// 		{'q1':10,'q2':12,'q3':8,'qq4':4,'s5':12,'q6':15,'q7':10,'q8':3,'q9':4,'q0':5}
+	// 	]
+	// ]
+
+	// var archive_time = [
+	// 	"3月3日0时11分","3月3日2时11分","3月3日4时11分","3月3日6时11分","3月3日8时11分","3月3日10时11分","3月3日12时11分","3月3日14时11分"
+	// ]
+
+	// var river_time = [
+	// 	["3月4日14时11分","3月4日14时21分","3月4日14时31分","3月4日14时41分","3月4日14时51分","3月4日15时01分","3月4日15时11分","3月4日15时21分","3月4日15时31分","3月4日15时31分"],
+	// 	["3月4日15时31分","3月4日15时41分","3月4日15时51分","3月4日16时01分","3月4日16时11分","3月4日16时21分","3月4日16时31分","3月4日16时41分","3月4日16时51分","3月4日17时01分"],
+	// 	["3月4日17时01分","3月4日17时11分","3月4日17时21分","3月4日17时31分","3月4日17时41分","3月4日17时51分","3月4日18时01分","3月4日18时11分","3月4日18时21分","3月4日18时31分"],
+	// 	["3月4日18时31分","3月4日18时41分","3月4日18时51分","3月4日19时01分","3月4日19时11分","3月4日19时21分","3月4日19时31分","3月4日19时41分","3月4日19时51分","3月4日20时01分"],
+	// 	["3月4日20时01分","3月4日20时11分","3月4日20时21分","3月4日20时31分","3月4日20时41分","3月4日20时51分","3月4日21时01分","3月4日21时11分","3月4日21时21分","3月4日21时21分"],
+	// 	["3月4日21时21分","3月4日21时31分","3月4日21时41分","3月4日21时51分","3月4日22时01分","3月4日22时11分","3月4日22时21分","3月4日22时31分","3月4日22时41分","3月4日22时51分"]
+	// ];
+
+	// var cut_off_text = [
+	// 	"3月4日17时",
+	// 	"3月4日17时",
+	// 	"3月4日17时",
+	// 	"3月4日17时",
+	// 	"3月4日17时",
+	// 	"3月4日17时",
+	// 	"3月4日17时",
+	// 	"3月4日17时"
+	// ];
+
+	// var settings = {
+	// 		has_detail_graph:true,
+	// 		graph_height:300,
+	// 		graph_width:1300,
+	// 		text_height:90,
+	// 		comment_height:30,
+	// 		detail_graph_height:260,
+	// 		topic_count:10,
+	// 		per_river_data_num:10,
+	// 		archive_data_num:8,
+	// 		max_sum_data:200,
+	// 		max_data:20,
+	// 		ball_move_time:200,
+	// 		ball_small_time:200,
+	// 		comment_name:"话题名称",
+	// 		father_id:"topic_river",
+	// 		max_word_frequency:350,
+	// 		min_word_frequency:30
+	// 	};
+
+	function init_graph(data){
+		var settings = {
+			has_detail_graph:true,
+			graph_height:300,
+			graph_width:1250,
+			text_height:90,
+			comment_height:30,
+			detail_graph_height:260,
+			topic_count:10,
+			per_river_data_num:21,
+			archive_data_num:6,
+			max_sum_data:8000000,
+			max_data:1200000,
+			ball_move_time:200,
+			ball_small_time:200,
+			comment_name:"话题名称",
+			father_id:"topic_river",
+			// max_word_frequency:800,
+			// min_word_frequency:0
+		};
+		var init_data = {
+			archive:data['archive_data'],
+			river:data['river_data'],
+			river_time:data['river_time'],
+			archive_time:data['archive_time']
+		}
+		tg.create(settings).init(init_data);
+		tg.addFuncGetWordCloud(get_word_cloud);
+		tg.addFuncOnClickEvent(onClickEvent);
+
+		
+
+		function get_word_cloud(name,time_start,time_end){
+			var word_cloud;
+			$.post("./wordclouddata.php", 
+				{
+					topic:name,
+					time_start:time_start,
+					time_end:time_end
+				}, 
+        		function(data,status){
+        			if("success" == status){
+	        			// alert(data);
+	        			word_cloud = JSON.parse(data)['word_cloud'];
+	        			tg.add_word_cloud(word_cloud);
+	        		}
+	        		else{
+	        			alert("数据加载异常！");
+	        		}
+	        	}
+        	);
+		}
+		
+		function onClickEvent(name,time_start,time_end){
+			// $("#weibo_frame").empty();
+			// d3.select("#weibo_frame")
+			// 	.append("p")
+			// 	.text("hello world: " + class_name);
+			var url = "./weibocontent.php?topic="+name+"&time_start="+time_start+"&time_end="+time_end;
+			d3.select("#weibo_frame")
+				.select("iframe")
+				.attr("src",url);
+		}
+	}
+
+	
+	function add_token(){
+		$.post("./tokendata.php", "", 
+        	function(data,status){
+        		if("success" == status){
+        			// alert(data)
+        			var token_data = JSON.parse(data);
+        			tg.addToken(
+        				token_data
+      //   				{
+						// 'data':river_data[5][9],
+						// 'time':'11'
+						// }
+					);
+        		}
+        		else{
+        			alert("数据加载异常！");
+        		}
+        	}
+        );
+	}
+	// $("#go_on").click(function(e){
+	// 		tokenOn = setInterval(add_token,500);
+	// 	});
+
+	// 	$("#stop").click(function(e){
+	// 		clearInterval(tokenOn);
+	// 	});
+
+	$(document).ready(function(){
+        $.post("./initdata.php", "", 
+        	function(data,status){
+        		if("success" == status){
+        			// alert(data);
+        			init_graph(JSON.parse(data));
+        		}
+        		else{
+        			alert("数据加载异常！");
+        		}
+        	}
+        );
+        var tokenOn;
+
+        d3.select("#next_step").on("click",function(){
+        	add_token();
+        });
+        d3.select("#go_on").on("click",function(){
+        	tokenOn = setInterval(add_token,500);
+        });
+        d3.select("#stop").on("click",function(){
+        	clearInterval(tokenOn);
+        });
+	})
+	
+</script>
+</html>
