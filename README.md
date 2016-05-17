@@ -68,6 +68,7 @@
 + tokendata.php		//获取流数据
 + weibocontent.php	//获取微博内容的页面
 + wordclouddata.php	//获取字云数据
++ srtp.sql		//本次示例所用到的数据库
 
 # 项目所用到的库
 + jQuery.js
