@@ -59,3 +59,17 @@
 > 传入流数据，生成小球动画并积压。
 
 ### 以上具体细节可以参考river_topic.html示例页面
+
+# 示例页面介绍
+本示例主要由一下文件组成：
++ topic_river.html  	//河流图主页面
++ connectDB.php		//连接数据库
++ initdata.php		//获取初始数据
++ tokendata.php		//获取流数据
++ weibocontent.php	//获取微博内容的页面
++ wordclouddata.php	//获取字云数据
+
+# 项目所用到的库
++ jQuery.js
++ d3.js
++ d3.layout.cloud.js
