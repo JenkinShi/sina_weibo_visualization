@@ -35,7 +35,6 @@ function topic_river(){
 	var yScale_left, yScale_right;
 	var cloud_width, cloud_height;
 
-	var get_word_cloud;
 	var on_click_event;
 	var X=new Function('x','return x*tg.settings.graph_width;');
 	var Y=new Function('y','return y*tg.settings.graph_height;');
@@ -72,8 +71,11 @@ function topic_river(){
 			mouseleave(class_name);
 			$("#left_graph .line").remove();
 			$("#left_graph circle").remove();
-			$("#right_graph #stack").remove();
 			$("#cloud_graph").empty();
+			tg.svg.select("#left_graph")
+				.on("mouseenter", function(){})
+				.on("mouseleave", function(){})
+				.on("mousemove", function(){});
 		}
 		else{
 			if(tg.clicked_name != ""){
@@ -243,56 +245,6 @@ function topic_river(){
 		// 			.attr("x2",x);
 		// 	});
 
-		get_word_cloud(class_name,tg.fix_data.river_time[iter][0],tg.fix_data.river_time[iter][tg.settings.per_river_data_num-2]);
-	}
-
-	this.add_word_cloud = function(words_cloud){
-		var max_fre = words_cloud.reduce(function(a,b){
-			if(a.size>b.size)
-				return a;
-			else
-				return b;
-		});
-		var min_fre = words_cloud.reduce(function(a,b){
-			if(a.size<b.size)
-				return a;
-			else
-				return b;
-		});
-
-		var wordScale = d3.scale
-			.linear()
-			.domain([min_fre.size,max_fre.size])
-			.range([20,70]);
-
-		d3.layout.cloud().size([cloud_width, cloud_height])
-			//map 返回新的object数组
-			.words(words_cloud)
-			//~~的作用是单纯的去掉小数部分，不论正负都不会改变整数部分 
-			//这里的作用是产生0 1 
-			.rotate(function() { return ~~(Math.random() * 2) * 90; })
-			.font("Impact")
-			.fontSize(function(d) { return wordScale(d.size); })
-			.on("end", function(words){
-				var fill = d3.scale.category20();
-				if($("#cloud_graph text").length != 0){
-					$("#cloud_graph").empty();
-				}
-				tg.svg.select("#cloud_graph")
-					.selectAll("text")
-					.data(words)
-					.enter().append("text")
-					.style("border","1px solid blue")
-					.style("font-size", function(d) { return d.size + "px"; })
-					.style("font-family", "Impact")
-					.style("fill", function(d, i) { return fill(i); })//fill 在前面15行定义为颜色集
-					.attr("text-anchor", "middle")
-					.attr("transform", function(d) {
-					  return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
-					})
-					.text(function(d) { return d.text; });
-			})//结束时运行draw函数
-			.start();
 	}
 
 	function circle_mouseover(x,y,value,time){
@@ -837,8 +789,7 @@ function topic_river(){
 			.transition()
 			.attr("class",new_name)
 			.attr("d",line)
-			.style({'fill':function(d){return colorTable[topic_color.get(new_name)]}});
-			
+			.style({'fill':function(d){return colorTable[topic_color.get(new_name)]}});	
 	}
 
 	function create_path(path, name, id, iter, isFirst){
@@ -1100,26 +1051,6 @@ function topic_river(){
 			.append("g")
 			.attr("id","cloud_graph")
 			.attr("transform", "translate("+(x3+cloud_width/2)+","+(h-tg.settings.detail_graph_height+cloud_height/2)+")");
-	
-		
-	}
-
-	this.create = function(settings){
-		tg.settings = settings;
-		tg.clicked_name = "";
-		tg.svg = d3.select("#"+tg.settings.father_id)
-			 .append("svg")
-			 .attr("width",tg.settings.graph_width)
-			 .attr("height",tg.settings.graph_height+tg.settings.text_height+tg.settings.comment_height+tg.settings.detail_graph_height);
-		return {
-			init: function(data){
-				tg.fix_data = data;
-				create_topic_river();
-				if(tg.settings.has_detail_graph){
-					create_detail_graph();
-				}
-			}
-		}
 	}
 
 	function draw_ball(isFirst,x0,x1,x2,topic_y_1,topic_y_2,obj,topic,intervel){
@@ -1255,12 +1186,26 @@ function topic_river(){
 		}
 	}
 
-	this.addFuncOnClickEvent = function(Func){
-		on_click_event = Func;
+	this.create = function(settings){
+		tg.settings = settings;
+		tg.clicked_name = "";
+		tg.svg = d3.select("#"+tg.settings.father_id)
+			 .append("svg")
+			 .attr("width",tg.settings.graph_width)
+			 .attr("height",tg.settings.graph_height+tg.settings.text_height+tg.settings.comment_height+tg.settings.detail_graph_height);
+		return {
+			init: function(data){
+				tg.fix_data = data;
+				create_topic_river();
+				if(tg.settings.has_detail_graph){
+					create_detail_graph();
+				}
+			}
+		}
 	}
 
-	this.addFuncGetWordCloud = function(Func){
-		get_word_cloud = Func;
+	this.addFuncOnClickEvent = function(Func){
+		on_click_event = Func;
 	}
 
 	this.addToken = function(obj){
@@ -1313,8 +1258,6 @@ function topic_river(){
 		time_accumulate.push(this_time);
 		streaming_token_num++;
 
-		path_data = cal_stream_path(x0_after,x1,x2,topic_y_1,topic_y_2,data_accumulate,topic);
-
 		if(streaming_token_num >= tg.settings.per_river_data_num-1){
 			streaming_token_num = 0;
 			$("#stream_text").empty();
@@ -1330,6 +1273,9 @@ function topic_river(){
 			add_cut_off_text();
 			return;
 		}
+
+		path_data = cal_stream_path(x0_after,x1,x2,topic_y_1,topic_y_2,data_accumulate,topic);
+
 
 		if($("#ball").length == 0){
 			g_ball = tg.svg
@@ -1403,6 +1349,55 @@ function topic_river(){
 				}
 			}, i*intervel_move);
 		}
+	}
+
+	this.add_word_cloud = function(words_cloud){
+		var max_fre = words_cloud.reduce(function(a,b){
+			if(a.size>b.size)
+				return a;
+			else
+				return b;
+		});
+		var min_fre = words_cloud.reduce(function(a,b){
+			if(a.size<b.size)
+				return a;
+			else
+				return b;
+		});
+
+		var wordScale = d3.scale
+			.linear()
+			.domain([min_fre.size,max_fre.size])
+			.range([20,70]);
+
+		d3.layout.cloud().size([cloud_width, cloud_height])
+			//map 返回新的object数组
+			.words(words_cloud)
+			//~~的作用是单纯的去掉小数部分，不论正负都不会改变整数部分 
+			//这里的作用是产生0 1 
+			.rotate(function() { return ~~(Math.random() * 2) * 90; })
+			.font("Impact")
+			.fontSize(function(d) { return wordScale(d.size); })
+			.on("end", function(words){
+				var fill = d3.scale.category20();
+				if($("#cloud_graph text").length != 0){
+					$("#cloud_graph").empty();
+				}
+				tg.svg.select("#cloud_graph")
+					.selectAll("text")
+					.data(words)
+					.enter().append("text")
+					.style("border","1px solid blue")
+					.style("font-size", function(d) { return d.size + "px"; })
+					.style("font-family", "Impact")
+					.style("fill", function(d, i) { return fill(i); })//fill 在前面15行定义为颜色集
+					.attr("text-anchor", "middle")
+					.attr("transform", function(d) {
+					  return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+					})
+					.text(function(d) { return d.text; });
+			})//结束时运行draw函数
+			.start();
 	}
 }
 

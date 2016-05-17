@@ -18,37 +18,42 @@
 
 	function init_graph(data){
 		var settings = {
-			has_detail_graph:true,
-			graph_height:300,
-			graph_width:1250,
-			text_height:90,
-			comment_height:30,
-			detail_graph_height:260,
-			topic_count:10,
-			per_river_data_num:21,
-			archive_data_num:6,
-			max_sum_data:8000000,
-			max_data:1200000,
-			ball_move_time:600,
-			ball_small_time:400,
-			comment_name:"话题名称",
-			father_id:"topic_river",
-
+			has_detail_graph:true,	//是否展示细节图
+			graph_height:300,		//河流图区域的高度
+			graph_width:1250,		//河流图区域的宽度
+			text_height:90,			//标签区域的高度
+			comment_height:30,		//简评区域的高度
+			detail_graph_height:260,//细节图区域的高度
+			topic_count:10,			//同一时间点展示的话题的数量
+			per_river_data_num:21,	//每段河流的数据的个数
+			archive_data_num:6,		//archive区域数据个数
+			max_sum_data:8000000,	//河流图同一时间点下数据值总和的最大值
+			max_data:1200000,		//单个数据的最大值
+			ball_move_time:600,		//小球移动所需的时间
+			ball_small_time:400,	//小球缩小所需的时间
+			comment_name:"话题名称", 	//简评区的标题
+			father_id:"topic_river",//河流图父节点的id
 		};
 		var init_data = {
-			archive:data['archive_data'],
+			archive:data['archive_data'],	
 			river:data['river_data'],
 			river_time:data['river_time'],
 			archive_time:data['archive_time']
 		}
 		tg.create(settings).init(init_data);
-		tg.addFuncGetWordCloud(get_word_cloud);
 		tg.addFuncOnClickEvent(onClickEvent);
-
 		
-
-		function get_word_cloud(name,time_start,time_end){
+		function onClickEvent(name,time_start,time_end){
 			var word_cloud;
+			var url_old = $("#weibo_frame iframe").attr("src");
+			var url = "./weibocontent.php?topic="+name+"&time_start="+time_start+"&time_end="+time_end;
+			if(url_old == url){
+				url = "";
+				d3.select("#weibo_frame")
+					.select("iframe")
+					.attr("src",url);
+				return;
+			}
 			$.post("./wordclouddata.php", 
 				{
 					topic:name,
@@ -66,14 +71,10 @@
 	        		}
 	        	}
         	);
-		}
-		
-		function onClickEvent(name,time_start,time_end){
-
-			var url = "./weibocontent.php?topic="+name+"&time_start="+time_start+"&time_end="+time_end;
 			d3.select("#weibo_frame")
 				.select("iframe")
 				.attr("src",url);
+			
 		}
 	}
 
