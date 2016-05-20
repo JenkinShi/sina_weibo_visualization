@@ -75,3 +75,6 @@
 + d3.js
 + d3.layout.cloud.js
 + scws的php扩展
+
+# 代码结构示意图
+![code struct](https://raw.githubusercontent.com/yinghdb/sina_weibo_visualization/master/pic/topic_river_code_struct.png)
