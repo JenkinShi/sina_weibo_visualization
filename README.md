@@ -12,6 +12,24 @@
 + 点击河流分段展示细节（包括折线图，字云）
 + 支持从外部导入需要点击事件
 
+# 环境部署
+本地测试环境为
+	apache 2.2.1
+	php 5.3.10
+	mysql 5.5.20
+	firefox 46.0.1
+	scws-1.2.3
+
+字云功能需要安装php的scws扩展
+下载地址为http://www.xunsearch.com/scws/download.php
+配置方法请参考官网http://www.xunsearch.com/scws/docs.php
+
+将srtp.sql中的数据导入数据库
+设置connectDB.php中的数据库连接参数
+
+将code文件夹完整拷贝至服务器目录下
+运行服务器下的topic_river.html文件，即可看到成果
+
 # 调用接口
 ## tg.create(settings).init(init_data);
 > 初始创建河流图，传入参数包括settings（初始配置），init_data（初始数据）
