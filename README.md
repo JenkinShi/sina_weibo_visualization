@@ -21,13 +21,17 @@
 + scws-1.2.3
 
 字云功能需要安装php的scws扩展
+
 下载地址为http://www.xunsearch.com/scws/download.php
+
 配置方法请参考官网http://www.xunsearch.com/scws/docs.php
 
 将srtp.sql中的数据导入数据库
+
 设置connectDB.php中的数据库连接参数
 
 将code文件夹完整拷贝至服务器目录下
+
 运行服务器下的topic_river.html文件，即可看到成果
 
 # 调用接口
