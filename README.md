@@ -14,11 +14,11 @@
 
 # 环境部署
 本地测试环境为
-	apache 2.2.1
-	php 5.3.10
-	mysql 5.5.20
-	firefox 46.0.1
-	scws-1.2.3
++ apache 2.2.1
++ php 5.3.10
++ mysql 5.5.20
++ firefox 46.0.1
++ scws-1.2.3
 
 字云功能需要安装php的scws扩展
 下载地址为http://www.xunsearch.com/scws/download.php
